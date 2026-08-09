@@ -1,0 +1,18 @@
+spec_id,segment,priority,primary_sources,current_obs,current_pctA_B,dominant_provider,current_tier
+LAWN-MEB,Mow/edge/trim/blow standard,1,surveys+invoices,0,0,n,INSUFFICIENT
+POOL-WEEKLY-CHEM-INC,Weekly pool (chem incl),1,surveys+invoices,0,0,n,INSUFFICIENT
+CLEAN-RECUR,Recurring standard clean,1,surveys+invoices,0,0,n,INSUFFICIENT
+POOL-RESURFACE,Pool resurfacing,2,bids+invoices,0,0,n,INSUFFICIENT
+CLEAN-MOVEOUT,Move-out clean,2,surveys+invoices,0,0,n,INSUFFICIENT
+POOL-DIAGNOSTIC,Pool diagnostic/repair,3,surveys+invoices,0,0,n,INSUFFICIENT
+HND-SERVICE-CALL,Handyman service call,3,rate sheets+quotes,0,0,n,INSUFFICIENT
+LANDSCAPE-RENO,Landscape project,3,itemized bids,0,0,n,INSUFFICIENT
+
+# ============================================================
+# CONFIDENCE TIERS (per spec_id AND per price_type; scope-matched obs only)
+#   INSUFFICIENT : < 10   -> show "not enough local data yet", lean on prior
+#   DIRECTIONAL  : 10-24  -> show a rough range, labeled directional
+#   PUBLISHED    : 25+    -> publish MEDIAN + P25 + P75 + date range + scope
+#   HIGH         : 50+  AND  >=40% tier A/B  AND  no dominant provider
+# Use robust medians/percentiles, NOT means. Update columns as you collect.
+# When a spec crosses a tier, update content.json (confidence + observations) and rebuild.

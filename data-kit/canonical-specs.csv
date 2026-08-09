@@ -1,0 +1,18 @@
+spec_id,service,segment,unit,key_variables,notes
+POOL-WEEKLY-CHEM-INC,pool-service,Weekly service - chemicals included,per month,"pool_size_gal, visits_per_month, salt_vs_chlorine",Do NOT pool with labor-only.
+POOL-WEEKLY-LABOR-ONLY,pool-service,Weekly service - labor only (chems billed separately),per month,"pool_size_gal, visits_per_month",Separate from chem-included.
+POOL-GREEN-REMEDIATION,pool-service,Green-to-clean remediation,per job,"pool_size_gal, severity",One-time; not routine service.
+POOL-DIAGNOSTIC,pool-service,Diagnostic / service call,per visit,"trip_fee, hourly_rate",Repair labor separate.
+POOL-PUMP-REPLACE,pool-service,Pump replacement,per job,"horsepower, variable_speed(y/n)",By HP / VS.
+POOL-FILTER-SERVICE,pool-service,Filter service,per job,"filter_type=cartridge|DE|sand",Keep filter types separate.
+POOL-RESURFACE,pool-service,Resurfacing,per project,"surface_sqft, finish=plaster|quartz|pebble, tile_condition, coping(y/n), spa(y/n)",Itemize; never a lump-sum median.
+LAWN-MOW-ONLY,lawn-landscaping,Mow only,per cut,"turf_area, frequency=weekly|biweekly",Separate from mow/edge/blow.
+LAWN-MEB,lawn-landscaping,Mow / edge / trim / blow,per cut,"turf_area(<=0.25ac?), access=flat|gated|sloped, bagging(y/n), frequency",Workhorse recurring spec.
+LAWN-AERATION,lawn-landscaping,Core aeration,per job,"turf_area, overseed(y/n)",One-time.
+LANDSCAPE-RENO,lawn-landscaping,Landscape / hardscape project,per project,"drainage(y/n), turf_type, patio_sqft, irrigation(y/n), materials",Itemize; stays directional.
+CLEAN-RECUR,house-cleaning,Recurring standard clean,per visit,"beds, baths, occupied_sqft, frequency, supplies(y/n)",Split by beds/baths.
+CLEAN-DEEP,house-cleaning,Initial / deep clean,per job,"beds, baths, sqft, condition",Separate from recurring.
+CLEAN-MOVEOUT,house-cleaning,Move-in / move-out clean,per job,"beds, baths, sqft, condition",Separate from deep.
+HND-SERVICE-CALL,handyman,Diagnostic / service-call minimum,flat,"trip, first_hour",Labor-only.
+HND-HOUR,handyman,One technician-hour,per hour,"one_tech, material_inclusive(y/n)",Exclude licensed-trade tasks.
+HND-HALF-DAY,handyman,Half-day labor,per half-day,"one_tech|two_tech",Separate from hourly.

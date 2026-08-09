@@ -1,0 +1,27 @@
+observation_id,spec_id,price_type,source_tier,scope_match,city,zip,price,unit,date_observed,provider_name,dominant_provider_flag,scope_vars,source_url_or_file
+OBS-0001,POOL-WEEKLY-CHEM-INC,advertised,C,exact,austin-tx,78749,310,per month,2026-08-05,Example Pool Co,n,"pool_size_gal=15000; chemicals_included=y; visits_per_month=4",https://example.com/pricing
+,,,,,,,,,,,,,
+# ============================================================
+# ONE ROW PER OBSERVATION. Never pool across price_type or spec.
+# ------------------------------------------------------------
+# price_type (NEVER average these together):
+#   advertised        = provider's public list/starting price
+#   quoted            = written estimate for a stated scope
+#   contracted        = signed price before work
+#   final_invoiced    = what the homeowner actually paid  <-- most valuable
+#   consumer_reported = homeowner says they paid X
+#
+#   NOTE: permit valuation is NOT a price_type. It is a declared
+#   construction value, not a paid price. Log permits in a SEPARATE
+#   scope/intent table -- never in this file, never pooled with prices.
+#
+# source_tier (evidence quality):
+#   A = paid final invoice / payment record
+#   B = dated written quote
+#   C = provider public price page
+#   D = consumer self-report
+#   E = aggregator estimate (Angi/Thumbtack averages) -- prior only, use sparingly
+#
+# scope_match: exact | close | loose   (only pool 'exact' + 'close' into a published range)
+# dominant_provider_flag: y if one provider supplies a large share of a segment's obs
+#   (a segment can't be 'high confidence' if one provider dominates it)
