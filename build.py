@@ -44,12 +44,13 @@ FONTS = ('<link rel="preconnect" href="https://fonts.googleapis.com">'
          'family=Inter:wght@400;500;600&'
          'family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">')
 
-def head(b, title, desc, path, jsonld, css_href="/assets/styles.css"):
-    url = "https://{}{}".format(b["domain"], path)
+def head(b, title, desc, path, jsonld, css_href="/assets/styles.css", robots=None, canonical=None):
+    url = canonical or "https://{}{}".format(b["domain"], path)
     blocks = "\n".join(
         '<script type="application/ld+json">{}</script>'.format(json.dumps(j, ensure_ascii=False))
         for j in jsonld
     )
+    robots_tag = f'\n<meta name="robots" content="{esc(robots)}">' if robots else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,7 +58,7 @@ def head(b, title, desc, path, jsonld, css_href="/assets/styles.css"):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
-<link rel="canonical" href="{esc(url)}">
+<link rel="canonical" href="{esc(url)}">{robots_tag}
 <meta property="og:type" content="website">
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
@@ -80,6 +81,7 @@ def header(b):
     <a href="/pool-service/">Pool</a>
     <a href="/house-cleaning/">Cleaning</a>
     <a href="/find-prices/">Find Prices</a>
+    <a href="/check-my-quote/">Check a Quote</a>
     <a href="/texas-price-index/">Price Index</a>
     <a href="/blog/">Blog</a>
     <a href="/for-pros/">For Pros</a>
@@ -216,8 +218,15 @@ def home(b, data):
     return head(b,title,desc,"/",jsonld) + header(b) + body + cc_data_script(b,data) + CC_JS + TL_JS + footer(b)
 
 def service_hub(b, data, svc):
-    pages = [p for p in data["cost_pages"] if p["service"]==svc["slug"]]
+    explicit = [p for p in data["cost_pages"] if p["service"]==svc["slug"]]
     city_by = {c["slug"]:c for c in data["cities"]}
+    # explicit pages first, then a templated page for every remaining city
+    covered = {p["city"] for p in explicit}
+    pages = list(explicit)
+    if svc["slug"] in data["price_finder"]:
+        for c in data["cities"]:
+            if c["slug"] not in covered:
+                pages.append(synth_cost_page(data, svc, c))
     rows = ""
     for p in pages:
         c = city_by[p["city"]]
@@ -225,7 +234,7 @@ def service_hub(b, data, svc):
         rows += f"""
     <a class="list-row" href="{href}">
       <div>
-        <div class="lr-t">{esc(p['segment'])}</div>
+        <div class="lr-t">{esc(p['segment'])} — {esc(c['name'])}</div>
         <div class="lr-s">{esc(c['name'])}, {esc(c['state'])}</div>
       </div>
       <div class="lr-p">{money(p['low'])}–{money(p['high'])}
@@ -398,6 +407,9 @@ def load_posts():
         meta["slug"] = meta.get("slug") or (m.group(2) if m else slugify(base))
         meta.setdefault("title", "Untitled post")
         meta.setdefault("description", "")
+        meta.setdefault("meta_title", "")
+        meta.setdefault("meta_description", "")
+        meta.setdefault("canonical", "")
         meta.setdefault("author", None)
         meta.setdefault("tags", "")
         meta["_html"] = _md_html(body)
@@ -445,7 +457,9 @@ def blog_post(b, p):
         "keywords": ", ".join(tags),
     }
     bc = _breadcrumb(b, [("Home", "/"), ("Blog", "/blog/"), (p["title"], path)])
-    title = f"{p['title']} — {b['name']}"
+    title = p.get("meta_title") or f"{p['title']} — {b['name']}"
+    desc = p.get("meta_description") or p.get("description", "")
+    canonical = p.get("canonical") or None
     body = f"""
 <div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span><a href="/blog/">Blog</a><span>/</span>{esc(p['title'][:40])}</div></div>
 <article class="section post"><div class="wrap">
@@ -458,7 +472,7 @@ def blog_post(b, p):
     <div class="acts"><a class="btn btn-primary" href="/find-prices/">Get your estimate</a></div>
   </div>
 </div></article>"""
-    return head(b, title, p.get("description", ""), path, [bc, art]) + header(b) + body + TL_JS + footer(b)
+    return head(b, title, desc, path, [bc, art], canonical=canonical) + header(b) + body + TL_JS + footer(b)
 
 def _breadcrumb(b, items):
     return {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
@@ -777,6 +791,167 @@ simRender(-1);
 </script>"""
     return head(b,title,desc,"/pros/simulator/",jsonld)+header(b)+footer(b)+body
 
+# ======================================================================
+# PROGRAMMATIC: auto-generate a cost page for any service x city
+# ======================================================================
+def synth_cost_page(data, svc, city):
+    """Build a templated cost-page dict for a city that has no explicit entry."""
+    pf = data["price_finder"].get(svc["slug"], {})
+    d  = svc.get("default", {})
+    seg = d.get("segment", svc["name"])
+    low, high, unit = pf.get("low"), pf.get("high"), pf.get("unit", "")
+    return {
+        "service": svc["slug"], "city": city["slug"], "segment": seg,
+        "low": low, "high": high, "unit": unit,
+        "confidence": "INSUFFICIENT", "observations": 0, "updated": "2026-08",
+        "summary": f"{seg} in {city['name']}, TX. This range reflects Austin-area operators' published pricing while we gather {city['name']}-specific data — a solid starting point, not a firm local median yet.",
+        "scope": d.get("scope", []),
+        "questions": d.get("questions", []),
+        "faqs": [
+            {"q": f"How much does {seg.lower()} cost in {city['name']}?",
+             "a": f"Expect roughly {money(low)}\u2013{money(high)} {unit} based on Austin-area operators' published rates. We're still building a {city['name']}-specific sample, so treat this as a starting range and confirm inclusions with each company."},
+            {"q": f"Can I get a real {city['name']} quote?",
+             "a": "Yes \u2014 see the fair range free, then get matched with one vetted local pro for a firm quote. No spam, no bidding war."},
+        ],
+        "_templated": True,
+    }
+
+# ======================================================================
+# INDEXED TOOL: "Is my quote fair?" price checker (SEO landing page)
+# ======================================================================
+def check_quote_page(b, data):
+    svcopts = "".join(f'<option value="{s["slug"]}">{esc(s["name"])}</option>' for s in data["services"])
+    faqs = [
+        ("How do I know if a home-service quote is fair in Austin?",
+         "Compare it to what the same job costs locally \u2014 for the same scope, not just the headline number. Two quotes for 'pool resurfacing' can describe completely different work. Paste your quote and we'll show how it stacks up against Austin pricing and what to ask before you sign."),
+        ("Is it free to check my quote?",
+         "Yes. Checking your quote against local pricing is free. If you want a second-opinion quote from a vetted pro, that's your choice \u2014 we never blast your info to a pile of companies."),
+        ("What should I do if my quote looks high?",
+         "Don't assume it's a rip-off \u2014 a higher price can reflect a bigger scope or better materials. Ask what's included, what's excluded, and what the warranty is. We give you the exact questions to ask."),
+    ]
+    faq_ld = {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+        {"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in faqs]}
+    bc = _breadcrumb(b, [("Home","/"),("Check my quote","/check-my-quote/")])
+    title = f"Is my quote fair? Austin home-service price checker — {b['name']}"
+    desc = "Paste a home-service quote and see if it's fair for Austin. Free, independent price check against real local data \u2014 plus the questions to ask before you sign."
+    faq_html = "".join(
+        f'<details><summary>{esc(q)}</summary><div class="a">{esc(a)}</div></details>' for q,a in faqs)
+    body = f"""
+<div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span>Check my quote</div></div>
+<section class="section" style="padding-top:26px"><div class="wrap">
+  <p class="eyebrow">Free price check · {esc(b['metro'])}, {esc(b['state'])}</p>
+  <h1 style="max-width:20ch">Is your quote fair? Find out in 30 seconds.</h1>
+  <p class="lead">Already have a quote from a contractor? Paste it in. We'll compare it to real Austin pricing and tell you what to ask before you sign \u2014 free, independent, no spam.</p>
+
+  <div class="finder" style="margin-top:22px">
+    <span class="flabel">Check your quote against local pricing</span>
+    <div class="frow"><select id="cq-svc" aria-label="Service"><option value="">Service…</option>{svcopts}</select>
+      <input type="text" id="cq-zip" inputmode="numeric" maxlength="5" placeholder="ZIP"></div>
+    <div class="frow" style="margin-top:8px"><input type="text" id="cq-amt" placeholder="What were you quoted? (e.g. $4,500)" style="flex:1"></div>
+    <div class="frow" style="margin-top:8px"><input type="text" id="cq-scope" placeholder="What's the job / what's included?" style="flex:1"></div>
+    <div class="frow" style="margin-top:8px"><input type="text" id="cq-contact" placeholder="Where do we send your verdict? (phone or email)" style="flex:1"></div>
+    <button class="btn btn-primary" style="margin-top:10px" onclick="cqSubmit()">Check my quote &rarr;</button>
+    <div class="cc-result" id="cq-result" style="margin-top:14px"></div>
+    <p class="cc-consent">We compare your number to local pricing and send your verdict. We can connect you with one vetted pro for a second opinion \u2014 only if you ask.</p>
+  </div>
+</div></section>
+
+<section class="section band"><div class="wrap">
+  <h2>How the price check works</h2>
+  <div class="faq" style="margin-top:16px">{faq_html}</div>
+</div></section>
+
+<script>
+function cqSubmit(){{
+  var svc=document.getElementById('cq-svc').value, zip=(document.getElementById('cq-zip').value||'').trim();
+  var amt=document.getElementById('cq-amt').value, scope=document.getElementById('cq-scope').value, contact=document.getElementById('cq-contact').value;
+  var out=document.getElementById('cq-result');
+  if(!svc||!amt||!contact){{out.innerHTML="<p class='cc-hint'>Add the service, the quoted amount, and where to send your verdict.</p>";out.style.display='block';return;}}
+  var payload={{service:svc,zip:zip,quote_amount:amt,quote_scope:scope,contact:contact,source:'check-my-quote'}};
+  var ep=window.CC_ENDPOINT||'';
+  if(!ep||ep.indexOf('REPLACE')===0){{
+    out.innerHTML="<div class='cc-card'><div class='cc-done'>Quote submitted \\u2713</div><div class='cc-meta' style='margin-top:6px'>Demo mode \\u2014 wire CC_ENDPOINT to capture: "+JSON.stringify(payload)+"</div></div>";
+    out.style.display='block';return;
+  }}
+  var f=document.createElement('form');f.method='POST';f.action=ep;for(var k in payload){{var i=document.createElement('input');i.type='hidden';i.name=k;i.value=payload[k]||'';f.appendChild(i);}}document.body.appendChild(f);f.submit();
+}}
+</script>"""
+    return head(b,title,desc,"/check-my-quote/",[bc,faq_ld])+header(b)+body+cc_data_script(b,data)+footer(b)
+
+# ======================================================================
+# AUTHORING: in-browser "New blog post" builder (noindex studio tool)
+# ======================================================================
+def studio_new_post_page(b, data):
+    title = f"New blog post — {b['name']} studio"
+    body = """
+<div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span>Studio</div></div>
+<section class="section" style="padding-top:26px"><div class="wrap" style="max-width:820px">
+  <p class="eyebrow">Studio · not indexed</p>
+  <h1>New blog post</h1>
+  <p class="lead">Fill in the fields, paste your content (Markdown or plain text), and download the ready-to-commit <code>.md</code> file. Drop it in <code>content/blog/</code>, push, and it's live.</p>
+
+  <div class="finder" style="max-width:none;margin-top:18px">
+    <div class="frow" style="display:block">
+      <label class="flabel">Title (the H1 on the page)</label>
+      <input type="text" id="b-title" placeholder="What should weekly pool service cost in Round Rock?" style="width:100%" oninput="bSlug()">
+    </div>
+    <div class="frow" style="display:block;margin-top:10px">
+      <label class="flabel">Slug (URL)</label>
+      <input type="text" id="b-slug" placeholder="weekly-pool-service-cost-round-rock" style="width:100%">
+    </div>
+    <div class="frow" style="display:block;margin-top:10px">
+      <label class="flabel">Meta title (SEO &lt;title&gt; — leave blank to use the title)</label>
+      <input type="text" id="b-metatitle" placeholder="Weekly Pool Service Cost in Round Rock (2026) — CasaCost" style="width:100%">
+    </div>
+    <div class="frow" style="display:block;margin-top:10px">
+      <label class="flabel">Meta description (155 chars)</label>
+      <input type="text" id="b-desc" placeholder="What weekly pool service really costs in Round Rock, TX — real local ranges and what to ask." style="width:100%" maxlength="160">
+    </div>
+    <div class="frow" style="margin-top:10px">
+      <div style="flex:1"><label class="flabel">Date</label><input type="text" id="b-date" placeholder="2026-08-10" style="width:100%"></div>
+      <div style="flex:1"><label class="flabel">Tags (comma-separated)</label><input type="text" id="b-tags" placeholder="pool, round rock, pricing" style="width:100%"></div>
+    </div>
+    <div class="frow" style="display:block;margin-top:10px">
+      <label class="flabel">Content (Markdown or plain text)</label>
+      <textarea id="b-body" rows="12" placeholder="## The standard scope&#10;&#10;Write your post here in Markdown…" style="width:100%;font-family:var(--mono);font-size:13px;border:1.5px solid var(--limestone-line);border-radius:10px;padding:12px"></textarea>
+    </div>
+    <div class="frow" style="margin-top:12px">
+      <button class="btn btn-primary" onclick="bMake()">Generate & download .md &rarr;</button>
+      <button class="btn btn-ghost" onclick="bCopy()">Copy to clipboard</button>
+    </div>
+    <div id="b-out" style="display:none;margin-top:14px">
+      <label class="flabel">Preview of your file</label>
+      <pre id="b-pre" style="background:var(--ink);color:#CFE0D5;border-radius:10px;padding:14px;overflow:auto;font-family:var(--mono);font-size:12px;white-space:pre-wrap"></pre>
+    </div>
+  </div>
+  <p class="pilot-note" style="margin-top:12px">Local tool — nothing is uploaded from here. For one-click publishing from Google Docs, see <code>tools/gdocs-publish.gs</code>.</p>
+</div></section>
+
+<script>
+function bSlugify(s){return s.toLowerCase().replace(/['\"]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+function bSlug(){var t=document.getElementById('b-title').value;var s=document.getElementById('b-slug');if(!s.dataset.touched)s.value=bSlugify(t);}
+document.addEventListener('input',function(e){if(e.target.id==='b-slug')e.target.dataset.touched='1';});
+function bFile(){
+  var v=function(id){return (document.getElementById(id).value||'').trim();};
+  var date=v('b-date')||new Date().toISOString().slice(0,10);
+  var slug=v('b-slug')||bSlugify(v('b-title'));
+  var fm='---\\n'+
+    'title: '+v('b-title')+'\\n'+
+    'slug: '+slug+'\\n'+
+    (v('b-metatitle')?'meta_title: '+v('b-metatitle')+'\\n':'')+
+    'description: '+v('b-desc')+'\\n'+
+    'date: '+date+'\\n'+
+    'author: '+'CasaCost'+'\\n'+
+    (v('b-tags')?'tags: '+v('b-tags')+'\\n':'')+
+    '---\\n\\n'+ document.getElementById('b-body').value.trim()+'\\n';
+  return {name:date+'-'+slug+'.md', text:fm};
+}
+function bMake(){var f=bFile();document.getElementById('b-pre').textContent=f.text;document.getElementById('b-out').style.display='block';
+  var blob=new Blob([f.text],{type:'text/markdown'});var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f.name;a.click();}
+function bCopy(){var f=bFile();navigator.clipboard.writeText(f.text).then(function(){alert('Copied '+f.name+' to clipboard.');});document.getElementById('b-pre').textContent=f.text;document.getElementById('b-out').style.display='block';}
+</script>"""
+    return head(b,title,"Internal authoring tool.","/studio/new-post/",[],robots="noindex,nofollow")+header(b)+body+footer(b)
+
 def build(inline=False):
     data=load(); b=data["brand"]
     if os.path.isdir(SITE): shutil.rmtree(SITE)
@@ -794,19 +969,36 @@ def build(inline=False):
         p="/{}/".format(s["slug"]); urls.append(p)
         write(p, service_hub(b,data,s))
 
+    # explicit cost pages
+    explicit=set()
     for cp in data["cost_pages"]:
         s=svc_by[cp["service"]]; c=city_by[cp["city"]]
         path=f"/{s['slug']}/{c['slug']}/{slugify(cp['segment'])}/"
+        explicit.add((cp["service"], cp["city"]))
         urls.append(path)
         write(path, cost_page(b,data,cp,s,c))
+
+    # PROGRAMMATIC: templated cost page for every service x city not covered above
+    for s in data["services"]:
+        if s["slug"] not in data["price_finder"]:
+            continue
+        for c in data["cities"]:
+            if (s["slug"], c["slug"]) in explicit:
+                continue
+            cp=synth_cost_page(data,s,c)
+            path=f"/{s['slug']}/{c['slug']}/{slugify(cp['segment'])}/"
+            urls.append(path)
+            write(path, cost_page(b,data,cp,s,c))
 
     urls.append("/texas-price-index/")
     write("/texas-price-index/", price_index(b,data))
 
-    # consumer finder + provider onboarding + routing demo
-    urls.append("/find-prices/");  write("/find-prices/", find_prices_page(b,data))
-    urls.append("/for-pros/");     write("/for-pros/", for_pros_page(b,data))
+    # consumer finder + quote checker + provider onboarding + routing demo + studio
+    urls.append("/find-prices/");    write("/find-prices/", find_prices_page(b,data))
+    urls.append("/check-my-quote/"); write("/check-my-quote/", check_quote_page(b,data))
+    urls.append("/for-pros/");       write("/for-pros/", for_pros_page(b,data))
     urls.append("/pros/simulator/"); write("/pros/simulator/", simulator_page(b,data))
+    write("/studio/new-post/", studio_new_post_page(b,data))  # noindex: not in sitemap
 
     # blog
     posts = load_posts()

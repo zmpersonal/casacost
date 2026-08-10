@@ -84,3 +84,23 @@ the critical path.
 2. Stand up the **social content engine** off these pages: each cost page = a "Guess the Price / Fair or Ripoff" post that links back. (Ask me to build the post-generator next.)
 3. Begin seeding pool + lawn segments to raise real `observations` / `confidence`.
 4. When a segment clears the data-ready gate, flip its confidence and deepen the page.
+
+---
+
+## Publishing blog posts — three ways (easiest first)
+
+1. **In-browser builder (no setup):** open `/studio/new-post/` on the site (it's
+   `noindex`, just for you). Fill in title, slug, meta title, meta description, date,
+   tags, paste your content, and click **Generate & download .md**. Drop the file in
+   `content/blog/`, commit, push — it's live in ~1 min. All SEO meta fields are set for you.
+
+2. **Google Docs one-click (closest to "write in a Doc, click, publish"):** paste
+   `tools/gdocs-publish.gs` into your Doc's Apps Script once (setup steps are in the file).
+   You get a **"CasaCost → Publish"** menu inside Google Docs; click it, set slug/meta/tags,
+   and it commits the post straight to this repo and triggers the build. No server of your own.
+
+3. **Decap CMS (full web CMS, most setup):** add a git-based CMS at `/admin/` if you want a
+   hosted editor with login. Optional upgrade.
+
+Front-matter fields supported: `title`, `slug`, `meta_title`, `meta_description`,
+`canonical`, `date`, `author`, `tags`.
