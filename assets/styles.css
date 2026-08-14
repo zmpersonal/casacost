@@ -356,3 +356,13 @@ p{margin:0 0 1em;}
 .cc-consent{font-size:12px;color:var(--ink-faint);line-height:1.45;margin:10px 0 0;}
 .cc-done{font-family:var(--disp);font-weight:600;font-size:18px;color:var(--pine);}
 @media (max-width:720px){.cc-doors{grid-template-columns:1fr;}}
+
+/* ---------- Vendor pages ---------- */
+.v-badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--limestone-line);border-radius:20px;padding:2px 8px;margin-left:6px;color:var(--ink-soft);}
+.v-badge.sponsored{border-color:var(--honey);color:var(--honey-600);background:var(--honey-050);}
+
+/* ---------- Project page options ---------- */
+.opts{display:grid;gap:10px;margin-top:4px;}
+.opt{display:flex;flex-direction:column;gap:2px;border:1px solid var(--limestone-line);border-left:4px solid var(--pine);border-radius:10px;padding:12px 14px;background:var(--limestone-2);}
+.opt b{font-family:var(--disp);font-weight:600;font-size:15px;color:var(--ink);}
+.opt span{font-size:13.5px;color:var(--ink-soft);}

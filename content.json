@@ -182,40 +182,6 @@
       ]
     },
     {
-      "service": "pool-service",
-      "city": "austin-tx",
-      "segment": "Pool resurfacing (replaster / pebble finish)",
-      "low": 7400,
-      "high": 12600,
-      "unit": "per project",
-      "confidence": "INSUFFICIENT",
-      "observations": 6,
-      "updated": "2026-08",
-      "summary": "Resurfacing a standard Austin pool \u2014 draining, prep, and a new plaster or pebble finish. Finish choice and pool size drive most of the price.",
-      "scope": [
-        "Drain and surface prep",
-        "New interior finish (plaster, quartz, or pebble)",
-        "Tile and coping touch-ups as scoped",
-        "Refill and startup chemistry"
-      ],
-      "questions": [
-        "What finish is quoted \u2014 plaster, quartz, or pebble \u2014 and what's the price difference?",
-        "Is tile and coping repair included or extra?",
-        "What warranty comes with the finish, and who honors it?",
-        "Is water for the refill included?"
-      ],
-      "faqs": [
-        {
-          "q": "How much does it cost to resurface a pool in Austin?",
-          "a": "For a standard pool, expect roughly $7,400\u2013$12,600 depending on finish. Basic plaster sits at the low end; quartz and pebble finishes cost more but last longer. We have only a small sample so far, so treat this as a starting range."
-        },
-        {
-          "q": "Is a $14,000 resurfacing quote too high?",
-          "a": "It can be reasonable for a larger pool or premium pebble finish with tile and coping work \u2014 or it can be padded. Compare scope, not just price. Upload the quote and we'll show how it stacks up."
-        }
-      ]
-    },
-    {
       "service": "house-cleaning",
       "city": "austin-tx",
       "segment": "Recurring house cleaning (biweekly, standard home)",
@@ -474,5 +440,286 @@
         "desc": "Full after-hours coverage with defined human fallback"
       }
     ]
-  }
+  },
+  "providers": [
+    {
+      "slug": "blue-line-pool-care",
+      "name": "Blue Line Pool Care",
+      "verticals": [
+        "pool-service"
+      ],
+      "areas": [
+        "Austin",
+        "Round Rock",
+        "Cedar Park"
+      ],
+      "url": "https://example.com/blueline",
+      "phone": "",
+      "blurb": "Weekly pool service and green-to-clean recovery across north Austin. Chemicals included, no contracts.",
+      "specialties": [
+        "Weekly service",
+        "Green-to-clean",
+        "Filter & pump repair"
+      ],
+      "founded": "2015",
+      "sponsored": false
+    },
+    {
+      "slug": "hill-country-mow-co",
+      "name": "Hill Country Mow Co",
+      "verticals": [
+        "lawn-landscaping"
+      ],
+      "areas": [
+        "Austin",
+        "Cedar Park",
+        "Leander",
+        "Georgetown"
+      ],
+      "url": "https://example.com/hcmow",
+      "phone": "",
+      "blurb": "Recurring mow, edge, and trim for standard and large lots, plus seasonal cleanups.",
+      "specialties": [
+        "Weekly & biweekly mowing",
+        "Large lots",
+        "Seasonal cleanup"
+      ],
+      "founded": "2018",
+      "sponsored": false
+    },
+    {
+      "slug": "clara-clean-atx",
+      "name": "Clara Clean ATX",
+      "verticals": [
+        "house-cleaning"
+      ],
+      "areas": [
+        "Austin",
+        "Pflugerville",
+        "Kyle"
+      ],
+      "url": "https://example.com/claraclean",
+      "phone": "",
+      "blurb": "Bilingual, insured recurring and deep cleaning. Same team each visit, supplies included.",
+      "specialties": [
+        "Recurring cleaning",
+        "Move-out / deep clean",
+        "Bilingual (EN/ES)"
+      ],
+      "founded": "2020",
+      "sponsored": false
+    }
+  ],
+  "pool_projects": [
+    {
+      "slug": "pool-remodeling",
+      "city": "austin-tx",
+      "name": "Pool Remodeling",
+      "head": "pool remodeling austin",
+      "low": 12000,
+      "high": 60000,
+      "unit": "per project",
+      "confidence": "INSUFFICIENT",
+      "observations": 0,
+      "updated": "2026-08",
+      "intro": "A pool remodel can mean anything from a fresh interior finish to a full transformation with new tile, coping, decking, and equipment. Because scope varies so widely, so does price \u2014 which is exactly why comparing quotes on the headline number misleads.",
+      "cost_drivers": [
+        "Scope: resurface-only vs. full remodel with tile, coping, and decking",
+        "Interior finish: plaster (low) vs. quartz vs. pebble (high)",
+        "Waterline tile and coping replacement",
+        "Decking square footage and material (concrete, pavers, travertine)",
+        "Equipment upgrades (variable-speed pump, heater, automation, saltwater)",
+        "Added features (spa, water features, lighting)"
+      ],
+      "options": [
+        [
+          "Resurface only",
+          "New interior finish. Roughly $7,000\u2013$13,000 for a standard pool."
+        ],
+        [
+          "Resurface + tile & coping",
+          "Adds waterline tile and coping. Often $12,000\u2013$25,000."
+        ],
+        [
+          "Full remodel",
+          "Finish, tile, coping, decking, and equipment. $25,000\u2013$60,000+."
+        ]
+      ],
+      "questions": [
+        "Is this a resurface only or a full remodel \u2014 and what's in each line item?",
+        "What interior finish is quoted, and what's its warranty and lifespan?",
+        "Are decking, tile, and coping included or separate?",
+        "Are equipment upgrades (pump, heater, automation) in scope?"
+      ],
+      "faqs": [
+        [
+          "How much does it cost to remodel a pool in Austin?",
+          "It depends heavily on scope. A resurface-only refresh runs roughly $7,000\u2013$13,000; adding tile and coping pushes toward $12,000\u2013$25,000; a full remodel with decking and equipment can run $25,000\u2013$60,000+. Define the scope first, then compare quotes line by line."
+        ],
+        [
+          "Pool remodel vs. resurface \u2014 what's the difference?",
+          "Resurfacing replaces just the interior finish. A remodel is broader \u2014 it can include tile, coping, decking, equipment, and new features. If your shell is sound and you just want it to look and feel new, resurfacing may be all you need."
+        ],
+        [
+          "How long does a pool remodel take?",
+          "A resurface is often about a week; a full remodel with decking and equipment can run several weeks depending on scope and weather."
+        ]
+      ],
+      "related": [
+        "pool-resurfacing",
+        "pool-repair"
+      ]
+    },
+    {
+      "slug": "pool-resurfacing",
+      "city": "austin-tx",
+      "name": "Pool Resurfacing",
+      "head": "pool resurfacing austin",
+      "low": 7400,
+      "high": 13000,
+      "unit": "per project",
+      "confidence": "INSUFFICIENT",
+      "observations": 6,
+      "updated": "2026-08",
+      "intro": "Resurfacing replaces your pool's interior finish \u2014 plaster, quartz, or pebble. It's the most common pool project, and the finish you choose drives most of the cost and how long it lasts.",
+      "cost_drivers": [
+        "Interior finish: plaster (low), quartz (mid), pebble (high)",
+        "Pool surface square footage",
+        "Waterline tile condition and repair",
+        "Coping repair",
+        "Spa inclusion",
+        "Water for the refill"
+      ],
+      "options": [
+        [
+          "Plaster",
+          "Lowest cost (~$4\u2013$8/sq ft). Typically lasts about 7\u201310 years."
+        ],
+        [
+          "Quartz",
+          "Mid-range (~$5\u2013$10/sq ft). More durable and stain-resistant."
+        ],
+        [
+          "Pebble / Pebble Tec",
+          "Highest cost (~$9\u2013$20/sq ft). Longest-lasting finish."
+        ]
+      ],
+      "questions": [
+        "What finish is quoted \u2014 plaster, quartz, or pebble \u2014 and the price difference?",
+        "Is tile and coping repair included or extra?",
+        "What warranty comes with the finish, and who honors it?",
+        "Is water for the refill included?"
+      ],
+      "faqs": [
+        [
+          "How much does pool resurfacing cost in Austin?",
+          "Roughly $7,400\u2013$13,000 for a standard pool, depending on finish. Plaster is cheapest; quartz and pebble cost more but last longer."
+        ],
+        [
+          "How often does a pool need resurfacing?",
+          "Plaster typically every 7\u201310 years; quartz and pebble last longer. A rough or stained surface, or plaster showing through, is a sign it's time."
+        ],
+        [
+          "Is $10,000 a fair price to resurface a pool?",
+          "It can be, for a mid-size pool with a quartz or pebble finish and some tile work. Compare scope, not just price \u2014 upload the quote and we'll show how it stacks up."
+        ]
+      ],
+      "related": [
+        "pool-remodeling",
+        "pool-repair"
+      ]
+    },
+    {
+      "slug": "pool-repair",
+      "city": "austin-tx",
+      "name": "Pool Repair",
+      "head": "pool repair austin",
+      "low": 150,
+      "high": 1200,
+      "unit": "per repair",
+      "confidence": "INSUFFICIENT",
+      "observations": 0,
+      "updated": "2026-08",
+      "intro": "Most pool repairs are equipment \u2014 pumps, filters, heaters, and plumbing. Costs range from a simple part to a full equipment replacement, so the diagnostic and an itemized quote matter.",
+      "cost_drivers": [
+        "What failed: pump, filter, heater, plumbing, or automation",
+        "Repair vs. full replacement",
+        "Part cost plus labor (hourly)",
+        "Variable-speed vs. single-speed pump",
+        "Heater type (gas vs. heat pump)"
+      ],
+      "signs": [
+        "Pump won't prime or is making noise",
+        "Water isn't heating",
+        "Cloudy water that won't clear (filter)",
+        "Water loss beyond normal evaporation (possible leak)",
+        "Equipment cycling on and off"
+      ],
+      "questions": [
+        "What's the diagnostic/service-call fee, and is it applied to the repair?",
+        "Is this a repair or a replacement, and why?",
+        "What's the hourly rate and the part cost, itemized?",
+        "What warranty covers the parts and labor?"
+      ],
+      "faqs": [
+        [
+          "How much does pool repair cost in Austin?",
+          "Simple repairs (seals, O-rings, timers) start around $150; a pump or filter service runs a few hundred; a full pump or heater replacement can run $700\u2013$5,500+ depending on type. Ask for the diagnostic fee and itemized parts plus labor."
+        ],
+        [
+          "Should I repair or replace pool equipment?",
+          "If a pump is more than about 8\u201310 years old, or the repair is more than half the replacement cost, replacing it (with an efficient variable-speed pump) often pays off in energy savings. Ask your pro to compare both."
+        ]
+      ],
+      "related": [
+        "pool-leak-detection",
+        "pool-resurfacing"
+      ]
+    },
+    {
+      "slug": "pool-leak-detection",
+      "city": "austin-tx",
+      "name": "Pool Leak Detection",
+      "head": "pool leak detection austin",
+      "low": 300,
+      "high": 600,
+      "unit": "per inspection",
+      "confidence": "INSUFFICIENT",
+      "observations": 0,
+      "updated": "2026-08",
+      "intro": "If your pool is losing more water than evaporation explains, a leak-detection service uses pressure testing, dye, and electronic listening to find the leak before the repair.",
+      "cost_drivers": [
+        "Detection method (pressure test, dye, electronic listening)",
+        "Pool size and plumbing complexity",
+        "Whether the repair is bundled or quoted separately"
+      ],
+      "signs": [
+        "Water loss beyond about 1/4 inch per day",
+        "Auto-fill running constantly",
+        "Wet or soggy spots around the pool",
+        "Air bubbles from the returns",
+        "Cracks in the shell or deck"
+      ],
+      "questions": [
+        "What detection methods do you use, and is the fee applied to the repair?",
+        "Do you provide a written report of where the leak is?",
+        "Is the repair quoted separately, and at what rate?",
+        "Will you provide an itemized invoice for a water-bill adjustment?"
+      ],
+      "faqs": [
+        [
+          "How much does pool leak detection cost in Austin?",
+          "A leak-detection service typically runs $300\u2013$600 depending on method and complexity; the repair is usually quoted separately. Some companies apply the detection fee to the repair \u2014 ask."
+        ],
+        [
+          "How do I know if my pool is leaking?",
+          "Try the bucket test: mark the water line, fill a bucket to the same level, and compare after 24 hours. If the pool drops noticeably more than the bucket, you likely have a leak rather than just evaporation."
+        ]
+      ],
+      "related": [
+        "pool-repair",
+        "pool-remodeling"
+      ]
+    }
+  ]
 }

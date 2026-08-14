@@ -82,6 +82,7 @@ def header(b):
     <a href="/house-cleaning/">Cleaning</a>
     <a href="/find-prices/">Find Prices</a>
     <a href="/check-my-quote/">Check a Quote</a>
+    <a href="/find-a-pro/">Find a Pro</a>
     <a href="/texas-price-index/">Price Index</a>
     <a href="/blog/">Blog</a>
     <a href="/for-pros/">For Pros</a>
@@ -217,6 +218,17 @@ def home(b, data):
 """
     return head(b,title,desc,"/",jsonld) + header(b) + body + cc_data_script(b,data) + CC_JS + TL_JS + footer(b)
 
+def _projects_block(b, data, svc):
+    if svc["slug"] != "pool-service" or not data.get("pool_projects"):
+        return ""
+    rows="".join(
+        f'<a class="list-row" href="/pool-service/{p["city"]}/{p["slug"]}/">'
+        f'<div><div class="lr-t">{esc(p["name"])} — {esc([c["name"] for c in data["cities"] if c["slug"]==p["city"]][0])}</div>'
+        f'<div class="lr-s">Cost, options &amp; what to ask</div></div>'
+        f'<div class="lr-p">{money(p["low"])}–{money(p["high"])}<span class="lr-c">{esc(p["unit"])}</span></div></a>'
+        for p in data["pool_projects"])
+    return f'<h2 style="margin-top:30px">Popular pool projects</h2><div class="list-grid">{rows}</div>'
+
 def service_hub(b, data, svc):
     explicit = [p for p in data["cost_pages"] if p["service"]==svc["slug"]]
     city_by = {c["slug"]:c for c in data["cities"]}
@@ -247,21 +259,22 @@ def service_hub(b, data, svc):
        "provider":{"@type":"Organization","name":b["name"]}},
       _breadcrumb(b,[("Home","/"),(svc["name"],f"/{svc['slug']}/")])
     ]
-    title=f"{svc['name']} Cost in Central Texas ({datetime.date.today().year}) — {b['name']}"
-    desc=f"Fair local pricing for {svc['short']} in {b['metro']} and Central Texas. {svc['intro'][:100]}"
+    title=f"{svc['name']} in {b['metro']}, {b['state']} — Costs, Companies & Get Matched | {b['name']}"
+    desc=f"{svc['name']} in {b['metro']}: fair local costs, vetted companies, and get matched with one pro. {svc['intro'][:80]}"
     body=f"""
 <div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span>{esc(svc['name'])}</div></div>
 <section class="section" style="padding-top:26px"><div class="wrap">
-  <p class="eyebrow">{esc(b['metro'])}, {esc(b['state'])} · pricing</p>
-  <h1 style="max-width:22ch">{esc(svc['hero_q'])}</h1>
-  <p class="lead">{esc(svc['intro'])}</p>
+  <p class="eyebrow">{esc(b['metro'])}, {esc(b['state'])}</p>
+  <h1 style="max-width:22ch">{esc(svc['name'])} in {esc(b['metro'])}, {esc(b['state'])}</h1>
+  <p class="lead">{esc(svc['hero_q'])} {esc(svc['intro'])}</p>
   <div class="list-grid">{rows}</div>
+  {_projects_block(b,data,svc)}
   <div class="method-note"><b>How we price.</b> {esc(data['methodology'])}</div>
 </div></section>
 <section class="section band"><div class="wrap" style="text-align:center">
   <h2 style="margin:0 auto">Have a {esc(svc['name'].lower())} quote already?</h2>
   <p class="lead" style="margin:12px auto 20px">Paste it in — we'll tell you if it's fair and what to ask before you sign.</p>
-  <a class="btn btn-primary" href="/find-prices/">Check my quote &rarr;</a>
+  <a class="btn btn-primary" href="/check-my-quote/">Check my quote &rarr;</a>
 </div></section>
 """
     return head(b,title,desc,f"/{svc['slug']}/",jsonld) + header(b) + body + TL_JS + footer(b)
@@ -952,6 +965,175 @@ function bCopy(){var f=bFile();navigator.clipboard.writeText(f.text).then(functi
 </script>"""
     return head(b,title,"Internal authoring tool.","/studio/new-post/",[],robots="noindex,nofollow")+header(b)+body+footer(b)
 
+# ======================================================================
+# VENDOR pages: directory + per-vendor profile (signup incentive + branded capture)
+# ======================================================================
+def _svc_name(data, slug):
+    for s in data["services"]:
+        if s["slug"]==slug: return s["name"]
+    return slug.replace("-"," ").title()
+
+def vendor_profile(b, data, v):
+    path=f"/pro/{v['slug']}/"
+    verts=", ".join(_svc_name(data,x) for x in v.get("verticals",[]))
+    areas=", ".join(v.get("areas",[]))
+    specs="".join(f"<li>{esc(x)}</li>" for x in v.get("specialties",[]))
+    ld={"@context":"https://schema.org","@type":"LocalBusiness","name":v["name"],
+        "description":v.get("blurb",""),"areaServed":[{"@type":"City","name":a} for a in v.get("areas",[])],
+        "url":v.get("url","") or None}
+    if v.get("phone"): ld["telephone"]=v["phone"]
+    ld={k:val for k,val in ld.items() if val is not None}
+    bc=_breadcrumb(b,[("Home","/"),("Find a pro","/find-a-pro/"),(v["name"],path)])
+    sponsored = v.get("sponsored")
+    badge = '<span class="v-badge sponsored">Sponsored</span>' if sponsored else '<span class="v-badge">Listed vendor</span>'
+    site_btn = (f'<a class="btn btn-pine" href="{esc(v["url"])}" rel="nofollow noopener" target="_blank">Visit {esc(v["name"])} website &rarr;</a>'
+                if v.get("url") else "")
+    title=f"{v['name']} — {verts} in Austin | {b['name']}"
+    desc=f"{v['name']}: {v.get('blurb','')[:120]}"
+    body=f"""
+<div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span><a href="/find-a-pro/">Find a pro</a><span>/</span>{esc(v['name'])}</div></div>
+<section class="section" style="padding-top:26px"><div class="wrap" style="max-width:820px">
+  <p class="eyebrow">{esc(verts)} · Austin, TX {badge}</p>
+  <h1 style="max-width:22ch">{esc(v['name'])}</h1>
+  <p class="lead">{esc(v.get('blurb',''))}</p>
+
+  <div class="two-col" style="margin-top:8px">
+    <div class="block">
+      <h2>Specialties</h2>
+      <ul class="scope-list">{specs}</ul>
+      <h2 style="margin-top:26px">Get matched with {esc(v['name'])}</h2>
+      <p style="color:var(--ink-soft);font-size:15px">Want this pro for your job? Get a fair local range first, then request them directly.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <a class="btn btn-primary" href="/find-prices/">Get matched &rarr;</a>
+        {site_btn}
+      </div>
+    </div>
+    <aside class="aside">
+      <h3>At a glance</h3>
+      <p><b>Services:</b> {esc(verts)}<br>
+         <b>Serves:</b> {esc(areas)}<br>
+         {("<b>Since:</b> "+esc(v['founded'])) if v.get('founded') else ""}</p>
+      <p style="margin-top:10px;font-size:12px;color:var(--ink-faint)">Listing on {esc(b['name'])} is not an endorsement or a quality ranking. {"This is a sponsored placement." if sponsored else ""}</p>
+    </aside>
+  </div>
+</div></section>"""
+    return head(b,title,desc,path,[bc,ld])+header(b)+body+footer(b)
+
+def directory_page(b, data):
+    provs=data.get("providers",[])
+    by={}
+    for v in provs:
+        for vert in v.get("verticals",["other"]):
+            by.setdefault(vert,[]).append(v)
+    sections=""
+    for s in data["services"]:
+        vs=by.get(s["slug"],[])
+        if not vs: continue
+        rows="".join(
+            f"""<a class="list-row" href="/pro/{v['slug']}/">
+                  <div><div class="lr-t">{esc(v['name'])}{' · Sponsored' if v.get('sponsored') else ''}</div>
+                  <div class="lr-s">{esc(', '.join(v.get('areas',[])))}</div></div>
+                  <div class="lr-p"><span class="lr-c">{esc(', '.join(v.get('specialties',[])[:2]))}</span></div>
+                </a>""" for v in vs)
+        sections+=f'<h2 style="margin-top:26px">{esc(s["name"])}</h2><div class="list-grid">{rows}</div>'
+    if not sections:
+        sections='<p class="lead">No vendors listed yet.</p>'
+    jsonld=[_breadcrumb(b,[("Home","/"),("Find a pro","/find-a-pro/")])]
+    title=f"Find a vetted Austin home-service pro — {b['name']}"
+    desc="Browse vetted Austin home-service pros by category and area, then get matched with one — no spam, no bidding war."
+    body=f"""
+<div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span>Find a pro</div></div>
+<section class="section" style="padding-top:26px"><div class="wrap">
+  <p class="eyebrow">Directory · {esc(b['metro'])}, {esc(b['state'])}</p>
+  <h1 style="max-width:20ch">Find a vetted Austin pro</h1>
+  <p class="lead">Browse pros by service and area. Every match is exclusive — one pro, no bidding war. Listings aren't rankings; sponsored placements are labeled.</p>
+  {sections}
+</div></section>
+<section class="section band"><div class="wrap" style="text-align:center">
+  <h2 style="margin:0 auto">Run a home-service business?</h2>
+  <p class="lead" style="margin:12px auto 20px">Get your own profile page, a link back to your site, and exclusive local leads.</p>
+  <a class="btn btn-primary" href="/for-pros/">List your business &rarr;</a>
+</div></section>"""
+    return head(b,title,desc,"/find-a-pro/",jsonld)+header(b)+body+footer(b)
+
+# ======================================================================
+# POOL PROJECT pages (high-value head terms: remodeling/resurfacing/repair/leak)
+# ======================================================================
+def project_page(b, data, proj):
+    city_by={c["slug"]:c for c in data["cities"]}
+    city=city_by.get(proj["city"], {"name":b["metro"],"state":b["state"]})
+    path=f"/pool-service/{proj['city']}/{proj['slug']}/"
+    conf=conf_class(proj["confidence"])
+    drivers="".join(f"<li>{esc(x)}</li>" for x in proj.get("cost_drivers",[]))
+    qs="".join(f"<li>{esc(x)}</li>" for x in proj.get("questions",[]))
+    options=""
+    if proj.get("options"):
+        rows="".join(f'<div class="opt"><b>{esc(n)}</b><span>{esc(note)}</span></div>' for n,note in proj["options"])
+        options=f'<h2 style="margin-top:30px">Your options</h2><div class="opts">{rows}</div>'
+    signs=""
+    if proj.get("signs"):
+        items="".join(f"<li>{esc(x)}</li>" for x in proj["signs"])
+        signs=f'<h2 style="margin-top:30px">Signs you need this</h2><ul class="scope-list">{items}</ul>'
+    faqs="".join(f'<details><summary>{esc(q)}</summary><div class="a">{esc(a)}</div></details>'
+                 for q,a in proj.get("faqs",[]))
+    faq_ld={"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+        {"@type":"Question","name":q,"acceptedAnswer":{"@type":"Answer","text":a}} for q,a in proj.get("faqs",[])]}
+    svc_ld={"@context":"https://schema.org","@type":"Service","serviceType":proj["name"],
+            "areaServed":{"@type":"City","name":city["name"]},
+            "provider":{"@type":"Organization","name":b["name"]}}
+    bc=_breadcrumb(b,[("Home","/"),("Pool Service","/pool-service/"),(proj["name"],path)])
+    # related links
+    pj_by={p["slug"]:p for p in data.get("pool_projects",[])}
+    rel="".join(
+        f'<a class="list-row" href="/pool-service/{pj_by[r]["city"]}/{r}/"><div><div class="lr-t">{esc(pj_by[r]["name"])}</div></div><div class="lr-p"><span class="lr-c">see costs</span></div></a>'
+        for r in proj.get("related",[]) if r in pj_by)
+    related_block=f'<h2 style="margin-top:34px">Related pool projects</h2><div class="list-grid">{rel}</div>' if rel else ""
+    title=f"{proj['name']} in {city['name']}, TX — Cost, Options & What to Ask | {b['name']}"
+    desc=f"{proj['name']} in {city['name']}: fair local cost range, what drives the price, and the questions to ask before you sign."
+    meter='<span class="m"></span><span class="m"></span><span class="m"></span>'
+    body=f"""
+<div class="wrap"><div class="crumb"><a href="/">Home</a><span>/</span><a href="/pool-service/">Pool Service</a><span>/</span>{esc(proj['name'])}</div></div>
+<section class="cost-head"><div class="wrap">
+  <p class="eyebrow">{esc(city['name'])}, {esc(city['state'])} · {esc(proj['updated'])}</p>
+  <h1>{esc(proj['name'])} in {esc(city['name'])}, {esc(city['state'])}</h1>
+  <p class="summary">{esc(proj['intro'])}</p>
+
+  <div class="pc {conf}">
+    <div class="pc-label">Fair local range</div>
+    <div class="range">{money(proj['low'])}–{money(proj['high'])}<span class="unit">{esc(proj['unit'])}</span></div>
+    <div class="pc-meter-wrap">
+      <div class="pc-meter">{meter}</div>
+      <span class="conf-tag">PRICE CONFIDENCE: {esc(proj['confidence'])}</span>
+      <span class="obs">{proj['observations']} local observations · updated {esc(proj['updated'])}</span>
+    </div>
+  </div>
+
+  <div class="cta-inline">
+    <div><h3>Got a {esc(proj['name'].lower())} quote?</h3>
+      <p>Paste it in and we'll show how it compares to local pricing — and what to ask before you sign.</p></div>
+    <div class="acts">
+      <a class="btn btn-primary" href="/check-my-quote/">Check my quote</a>
+      <a class="btn btn-ghost" href="/find-prices/">Get matched</a>
+    </div>
+  </div>
+</div></section>
+
+<section class="section" style="padding-top:8px"><div class="wrap">
+  <div class="block">
+    <h2>What drives the cost</h2>
+    <ul class="scope-list">{drivers}</ul>
+    {options}
+    {signs}
+    <h2 style="margin-top:30px">Questions to ask before you hire</h2>
+    <ul class="q-list">{qs}</ul>
+  </div>
+
+  <div class="faq" style="margin-top:34px"><h2>Common questions</h2>{faqs}</div>
+  {related_block}
+  <div class="method-note" style="margin-top:24px"><b>How we price.</b> {esc(data['methodology'])}</div>
+</div></section>"""
+    return head(b,title,desc,path,[bc,svc_ld,faq_ld])+header(b)+body+footer(b)
+
 def build(inline=False):
     data=load(); b=data["brand"]
     if os.path.isdir(SITE): shutil.rmtree(SITE)
@@ -993,12 +1175,23 @@ def build(inline=False):
     urls.append("/texas-price-index/")
     write("/texas-price-index/", price_index(b,data))
 
+    # pool project pages (high-value head terms)
+    for proj in data.get("pool_projects", []):
+        pp=f"/pool-service/{proj['city']}/{proj['slug']}/"
+        urls.append(pp); write(pp, project_page(b,data,proj))
+
     # consumer finder + quote checker + provider onboarding + routing demo + studio
     urls.append("/find-prices/");    write("/find-prices/", find_prices_page(b,data))
     urls.append("/check-my-quote/"); write("/check-my-quote/", check_quote_page(b,data))
     urls.append("/for-pros/");       write("/for-pros/", for_pros_page(b,data))
     urls.append("/pros/simulator/"); write("/pros/simulator/", simulator_page(b,data))
     write("/studio/new-post/", studio_new_post_page(b,data))  # noindex: not in sitemap
+
+    # vendor directory + per-vendor profile pages
+    if data.get("providers"):
+        urls.append("/find-a-pro/"); write("/find-a-pro/", directory_page(b,data))
+        for v in data["providers"]:
+            vp=f"/pro/{v['slug']}/"; urls.append(vp); write(vp, vendor_profile(b,data,v))
 
     # blog
     posts = load_posts()
